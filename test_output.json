@@ -1,0 +1,156 @@
+{
+  "version": "1.0",
+  "source": {
+    "video_url": "https://www.youtube.com/watch?v=tKHawC_fZLs",
+    "video_title": "New in Houdini 18: RBD Solver - Guided Simulation",
+    "extracted_at": "2026-01-20T16:22:53.597654Z"
+  },
+  "networks": [
+    {
+      "path": "/obj/geo1",
+      "type": "geo",
+      "nodes": [
+        {
+          "name": "box1",
+          "type": "geometry",
+          "position": [
+            -3.0,
+            0.0
+          ],
+          "params": {}
+        },
+        {
+          "name": "box2",
+          "type": "geometry",
+          "position": [
+            3.0,
+            0.0
+          ],
+          "params": {}
+        },
+        {
+          "name": "rbdmaterialfracture1",
+          "type": "rbdmaterialfracture",
+          "position": [
+            -7.0,
+            2.0
+          ],
+          "params": {}
+        },
+        {
+          "name": "rbdbulletsolver1",
+          "type": "rbdbulletsolver",
+          "position": [
+            -7.0,
+            -3.4
+          ],
+          "params": {}
+        },
+        {
+          "name": "sphere1",
+          "type": "sphere",
+          "position": [
+            2.0,
+            2.0
+          ],
+          "params": {}
+        }
+      ],
+      "connections": [
+        [
+          "box1",
+          0,
+          "rbdmaterialfracture1",
+          0
+        ],
+        [
+          "rbdmaterialfracture1",
+          0,
+          "rbdbulletsolver1",
+          0
+        ],
+        [
+          "sphere1",
+          0,
+          "rbdbulletsolver1",
+          1
+        ]
+      ],
+      "display_node": "rbdbulletsolver1",
+      "render_node": "sphere1"
+    }
+  ],
+  "extraction_metadata": {
+    "total_frames_analyzed": 8,
+    "valid_extractions": 7,
+    "action_events_detected": 11,
+    "confidence_score": 0.95,
+    "flagged_for_review": [
+      {
+        "element": "precise node positions",
+        "timestamp": 11.72
+      },
+      {
+        "element": "The exact input index for 'sphere1' into 'rbdbulletsolver1' is inferred as 1, which is common for a secondary collider input.",
+        "timestamp": 13.22
+      }
+    ],
+    "timeline": [
+      {
+        "time": 11.22,
+        "action": "context_switch",
+        "raw_text": "disabled a box one and dive into a box -"
+      },
+      {
+        "time": 13.379,
+        "action": "node_delete",
+        "raw_text": "let's just get rid of this sphere here"
+      },
+      {
+        "time": 17.52,
+        "action": "context_switch",
+        "raw_text": "initial object I'd back to create"
+      },
+      {
+        "time": 29.55,
+        "action": "node_connect",
+        "raw_text": "bends up here and I'll wire it in in"
+      },
+      {
+        "time": 35.64,
+        "action": "param_change",
+        "raw_text": "highlight it set it up so the formation"
+      },
+      {
+        "time": 54.69,
+        "action": "node_create",
+        "raw_text": "drop down an expression so dollar FF"
+      },
+      {
+        "time": 68.31,
+        "action": "selection",
+        "raw_text": "here highlight the bullets all over here"
+      },
+      {
+        "time": 140.68,
+        "action": "param_change",
+        "raw_text": "by default they are set to break after a"
+      },
+      {
+        "time": 148.51,
+        "action": "param_change",
+        "raw_text": "to set an accumulated threshold value"
+      },
+      {
+        "time": 178.99,
+        "action": "context_switch",
+        "raw_text": "going to the setup tab in my guided"
+      },
+      {
+        "time": 210.28,
+        "action": "node_connect",
+        "raw_text": "you pipe in deforming geometry in the"
+      }
+    ]
+  }
+}

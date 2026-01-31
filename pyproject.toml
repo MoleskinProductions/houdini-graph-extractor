@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "houdini-graph-extractor"
+version = "0.1.0"
+description = "Extract Houdini node graphs from YouTube tutorial videos"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "yt-dlp>=2024.0.0",
+    "youtube-transcript-api>=0.6.0",
+    "ffmpeg-python>=0.2.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "openai>=1.0.0",  # For vLLM OpenAI-compatible API
+    "httpx>=0.25.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "ruff>=0.1.0",
+]
+hougraph = [
+    "hougraph-ir>=1.0.0",
+]
+all = [
+    "hougraph-ir>=1.0.0",
+]
+
+[project.scripts]
+houdini-extract = "src.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

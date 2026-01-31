@@ -1,0 +1,348 @@
+{
+  "version": "1.0",
+  "source": {
+    "video_url": "https://www.youtube.com/watch?v=tKHawC_fZLs",
+    "video_title": "New in Houdini 18: RBD Solver - Guided Simulation",
+    "extracted_at": "2026-01-22T08:29:51.364243+00:00"
+  },
+  "networks": [
+    {
+      "path": "/obj/box2",
+      "type": "geo",
+      "nodes": [
+        {
+          "name": "box1",
+          "type": "box",
+          "position": [
+            -4.0,
+            4.0
+          ],
+          "params": {
+            "capture_region_axis": "Y",
+            "capture_length": "4",
+            "twist": "enabled",
+            "expression": "$FF * 3"
+          },
+          "_metadata": {
+            "confidence": 0.86,
+            "first_seen": 35.14,
+            "last_seen": 54.19,
+            "observation_count": 5,
+            "transcript_corroborated": false
+          }
+        },
+        {
+          "name": "rbdmaterialfracture1",
+          "type": "rbdmaterialfracture",
+          "position": [
+            -4.0,
+            2.0
+          ],
+          "params": {
+            "distance_threshold": "0.15",
+            "use_guided_neighbors": "true",
+            "ensure_neighbors": "true"
+          },
+          "_metadata": {
+            "confidence": 0.86,
+            "first_seen": 35.14,
+            "last_seen": 184.91,
+            "observation_count": 9,
+            "transcript_corroborated": false
+          }
+        },
+        {
+          "name": "rbdbulletsolver1",
+          "type": "rbdbulletsolver",
+          "position": [
+            -4.0,
+            -6.0
+          ],
+          "params": {
+            "use_guides": "enable"
+          },
+          "_metadata": {
+            "confidence": 0.94,
+            "first_seen": 35.14,
+            "last_seen": 184.91,
+            "observation_count": 7,
+            "transcript_corroborated": true
+          }
+        },
+        {
+          "name": "bend1",
+          "type": "bend",
+          "position": [
+            4.0,
+            -2.0
+          ],
+          "params": {},
+          "_metadata": {
+            "confidence": 0.86,
+            "first_seen": 35.14,
+            "last_seen": 184.91,
+            "observation_count": 9,
+            "transcript_corroborated": false
+          }
+        },
+        {
+          "name": "rdbulletsolver1",
+          "type": "rdbulletsolver",
+          "position": [
+            -4.0,
+            -4.0
+          ],
+          "params": {},
+          "_metadata": {
+            "confidence": 0.86,
+            "first_seen": 54.19,
+            "last_seen": 180.17,
+            "observation_count": 2,
+            "transcript_corroborated": false
+          }
+        }
+      ],
+      "connections": [
+        [
+          "box1",
+          0,
+          "rbdmaterialfracture1",
+          0
+        ],
+        [
+          "rbdmaterialfracture1",
+          0,
+          "rbdbulletsolver1",
+          0
+        ],
+        [
+          "rbdbulletsolver1",
+          0,
+          "bend1",
+          0
+        ],
+        [
+          "rbdmaterialfracture1",
+          0,
+          "bend1",
+          0
+        ],
+        [
+          "bend1",
+          0,
+          "rbdbulletsolver1",
+          0
+        ],
+        [
+          "bend1",
+          0,
+          "rdbulletsolver1",
+          0
+        ],
+        [
+          "bend1",
+          0,
+          "rbdbulletsolver1",
+          1
+        ],
+        [
+          "rbdmaterialfracture1",
+          0,
+          "rdbulletsolver1",
+          0
+        ],
+        [
+          "bend1",
+          0,
+          "rdbulletsolver1",
+          1
+        ]
+      ],
+      "display_node": "rbdbulletsolver1",
+      "render_node": null
+    }
+  ],
+  "extraction_metadata": {
+    "total_frames_analyzed": 12,
+    "valid_extractions": 9,
+    "action_events_detected": 12,
+    "confidence_score": 0.87484608,
+    "flagged_for_review": [
+      {
+        "type": "EXTRA_VISUAL_NODE",
+        "timestamp": 72.16,
+        "resolution": "ACCEPT_WITH_PENALTY"
+      },
+      {
+        "type": "EXTRA_VISUAL_NODE",
+        "timestamp": 72.16,
+        "resolution": "ACCEPT_WITH_PENALTY"
+      }
+    ],
+    "processing_mode": {
+      "transcript_analyzer": "llm",
+      "harmonization": true
+    },
+    "timeline": [
+      {
+        "time": 11.22,
+        "action": "context_switch",
+        "raw_text": "disabled a box one and dive into a box -"
+      },
+      {
+        "time": 13.379,
+        "action": "node_delete",
+        "raw_text": "let's just get rid of this sphere here"
+      },
+      {
+        "time": 29.55,
+        "action": "node_connect",
+        "raw_text": "bends up here and I'll wire it in in"
+      },
+      {
+        "time": 35.64,
+        "action": "selection",
+        "raw_text": "highlight it set it up so the formation"
+      },
+      {
+        "time": 38.429,
+        "action": "param_change",
+        "raw_text": "here the capture region happens along Y"
+      },
+      {
+        "time": 40.89,
+        "action": "param_change",
+        "raw_text": "and not Z and the capture lengths as for"
+      },
+      {
+        "time": 48.149,
+        "action": "param_change",
+        "raw_text": "instead enable the twist so I can do now"
+      },
+      {
+        "time": 54.69,
+        "action": "param_change",
+        "raw_text": "drop down an expression so dollar FF"
+      },
+      {
+        "time": 72.659,
+        "action": "param_change",
+        "raw_text": "to guided simulation and enable use"
+      },
+      {
+        "time": 152.8,
+        "action": "param_change",
+        "raw_text": "the distance threshold here of 0.15 that"
+      },
+      {
+        "time": 180.67,
+        "action": "param_change",
+        "raw_text": "simulation there and check use guided"
+      },
+      {
+        "time": 185.41,
+        "action": "param_change",
+        "raw_text": "the guided neighbors section and check"
+      }
+    ],
+    "harmonization": {
+      "corroborated_nodes": 1,
+      "conflicts_detected": 2,
+      "harmony_score": 0.43,
+      "params_extracted": 8,
+      "nodes_with_params": 3
+    }
+  },
+  "_connection_metadata": [
+    {
+      "connection": [
+        "box1",
+        0,
+        "rbdmaterialfracture1",
+        0
+      ],
+      "confidence": 0.91,
+      "observation_count": 5
+    },
+    {
+      "connection": [
+        "rbdmaterialfracture1",
+        0,
+        "rbdbulletsolver1",
+        0
+      ],
+      "confidence": 0.9,
+      "observation_count": 4
+    },
+    {
+      "connection": [
+        "rbdbulletsolver1",
+        0,
+        "bend1",
+        0
+      ],
+      "confidence": 0.9,
+      "observation_count": 1
+    },
+    {
+      "connection": [
+        "rbdmaterialfracture1",
+        0,
+        "bend1",
+        0
+      ],
+      "confidence": 0.91,
+      "observation_count": 4
+    },
+    {
+      "connection": [
+        "bend1",
+        0,
+        "rbdbulletsolver1",
+        0
+      ],
+      "confidence": 0.92,
+      "observation_count": 3
+    },
+    {
+      "connection": [
+        "bend1",
+        0,
+        "rdbulletsolver1",
+        0
+      ],
+      "confidence": 0.9,
+      "observation_count": 1
+    },
+    {
+      "connection": [
+        "bend1",
+        0,
+        "rbdbulletsolver1",
+        1
+      ],
+      "confidence": 0.9,
+      "observation_count": 3
+    },
+    {
+      "connection": [
+        "rbdmaterialfracture1",
+        0,
+        "rdbulletsolver1",
+        0
+      ],
+      "confidence": 0.8,
+      "observation_count": 1
+    },
+    {
+      "connection": [
+        "bend1",
+        0,
+        "rdbulletsolver1",
+        1
+      ],
+      "confidence": 0.8,
+      "observation_count": 1
+    }
+  ]
+}
