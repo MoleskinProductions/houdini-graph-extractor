@@ -88,6 +88,16 @@ class HelpDocsConfig:
 
 
 @dataclass
+class LabsHDAConfig:
+    """Labs HDA internal graph extraction settings."""
+
+    hython_path: Path = field(default_factory=lambda: Path("/opt/hfs21.0/bin/hython"))
+    categories: list[str] = field(default_factory=list)  # Empty = all
+    library_filter: str = "SideFXLabs"
+    timeout: int = 300
+
+
+@dataclass
 class Config:
     """Main configuration container."""
 
@@ -99,6 +109,7 @@ class Config:
     state: StateConfig = field(default_factory=StateConfig)
     help_docs: HelpDocsConfig = field(default_factory=HelpDocsConfig)
     node_schema: NodeSchemaConfig = field(default_factory=NodeSchemaConfig)
+    labs_hda: LabsHDAConfig = field(default_factory=LabsHDAConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))

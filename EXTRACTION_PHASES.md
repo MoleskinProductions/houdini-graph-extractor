@@ -59,10 +59,10 @@ Extract globally:
 - Orchestrator consumes via MCP tool: `query_node_help(node_type) → help_text`
 - Concept pages available via: `query_concept(topic) → explanation`
 
-### 1C — Labs Toolset Extraction
+### 1C — Labs Toolset Extraction ✅
 
 **Source:** SideFX Labs HDAs (installed as a Houdini package)
-**Mechanism:** HDA introspection via hou module
+**Mechanism:** `src/ingestion/labs_hda/` (implemented)
 
 Labs nodes are HDAs (Houdini Digital Assets) wrapping subnet logic:
 - Extract the same schema as 1A (external interface)

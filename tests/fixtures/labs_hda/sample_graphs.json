@@ -1,0 +1,178 @@
+{
+  "version": "1.0",
+  "houdini_version": "21.0.506",
+  "extraction_timestamp": "2025-01-20T12:00:00+00:00",
+  "hda_count": 3,
+  "contexts": [
+    "out",
+    "sop",
+    "top"
+  ],
+  "graphs": {
+    "sop/labs::quickmaterial::2.0": {
+      "type_name": "labs::quickmaterial::2.0",
+      "category": "Sop",
+      "label": "Quick Material",
+      "library_path": "/opt/sidefx/sidefx_packages/SideFXLabs21.0/otls/SideFX_Labs.hda",
+      "min_inputs": 1,
+      "max_inputs": 1,
+      "max_outputs": 1,
+      "subnet_inputs": [
+        {
+          "index": 0,
+          "name": "Input 1",
+          "connections": [
+            {"dest_node": "material_assign", "dest_input": 0}
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "name": "material_assign",
+          "type": "material",
+          "position": [0.0, -2.0],
+          "display_flag": true,
+          "parameters": [
+            {
+              "name": "shop_materialpath1",
+              "value": "/mat/quickmaterial",
+              "expression": "ch(\"../material_path\")",
+              "expression_language": "hscript"
+            }
+          ]
+        },
+        {
+          "name": "principled_shader",
+          "type": "principledshader::2.0",
+          "position": [4.0, 0.0],
+          "parameters": [
+            {
+              "name": "basecolor_texture",
+              "value": ""
+            },
+            {
+              "name": "rough",
+              "value": 0.3
+            }
+          ]
+        },
+        {
+          "name": "output0",
+          "type": "output",
+          "position": [0.0, -4.0],
+          "is_output": true
+        }
+      ],
+      "connections": [
+        {
+          "source_node": "material_assign",
+          "source_output": 0,
+          "dest_node": "output0",
+          "dest_input": 0
+        }
+      ]
+    },
+    "sop/labs::edge_damage::2.0": {
+      "type_name": "labs::edge_damage::2.0",
+      "category": "Sop",
+      "label": "Edge Damage",
+      "library_path": "/opt/sidefx/sidefx_packages/SideFXLabs21.0/otls/SideFX_Labs.hda",
+      "min_inputs": 1,
+      "max_inputs": 1,
+      "max_outputs": 1,
+      "subnet_inputs": [
+        {
+          "index": 0,
+          "name": "Geometry",
+          "connections": [
+            {"dest_node": "group_edges", "dest_input": 0},
+            {"dest_node": "measure1", "dest_input": 0}
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "name": "group_edges",
+          "type": "groupcreate",
+          "position": [0.0, 0.0],
+          "parameters": [
+            {
+              "name": "groupname",
+              "value": "_edge_group"
+            },
+            {
+              "name": "grouptype",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "name": "measure1",
+          "type": "measure",
+          "position": [4.0, 0.0]
+        },
+        {
+          "name": "mountain1",
+          "type": "mountain::2.0",
+          "position": [0.0, -2.0],
+          "parameters": [
+            {
+              "name": "height",
+              "value": 0.02,
+              "expression": "ch(\"../damage_amount\")",
+              "expression_language": "hscript"
+            },
+            {
+              "name": "elementsize",
+              "value": 0.1
+            }
+          ]
+        },
+        {
+          "name": "output0",
+          "type": "output",
+          "position": [0.0, -4.0],
+          "display_flag": true,
+          "is_output": true
+        }
+      ],
+      "connections": [
+        {
+          "source_node": "group_edges",
+          "source_output": 0,
+          "dest_node": "mountain1",
+          "dest_input": 0
+        },
+        {
+          "source_node": "mountain1",
+          "source_output": 0,
+          "dest_node": "output0",
+          "dest_input": 0
+        }
+      ]
+    },
+    "top/labs::wedge_postprocess": {
+      "type_name": "labs::wedge_postprocess",
+      "category": "Top",
+      "label": "Wedge Postprocess",
+      "library_path": "/opt/sidefx/sidefx_packages/SideFXLabs21.0/otls/SideFX_Labs.hda",
+      "max_inputs": 1,
+      "max_outputs": 1,
+      "nodes": [
+        {
+          "name": "pythonscript1",
+          "type": "pythonscript",
+          "position": [0.0, 0.0],
+          "display_flag": true,
+          "parameters": [
+            {
+              "name": "pdg_workitemgeneration",
+              "value": 1
+            }
+          ]
+        }
+      ],
+      "connections": []
+    }
+  }
+}

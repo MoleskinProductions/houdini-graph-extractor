@@ -640,5 +640,115 @@ def node_schema(output: str, hython_path: str, categories: str | None, no_ports:
         sys.exit(1)
 
 
+@click.command("labs-hda")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    default="labs_graphs.json",
+    help="Output JSON file path",
+)
+@click.option(
+    "--hython-path",
+    type=click.Path(),
+    default="/opt/hfs21.0/bin/hython",
+    help="Path to hython executable",
+)
+@click.option(
+    "--categories",
+    type=str,
+    default=None,
+    help="Comma-separated categories to extract (e.g. Sop,Dop,Top). Default: all.",
+)
+@click.option(
+    "--library-filter",
+    type=str,
+    default="SideFXLabs",
+    help="Filter HDAs by library path containing this string (default: SideFXLabs)",
+)
+@click.option(
+    "--timeout",
+    type=int,
+    default=300,
+    help="Timeout in seconds for hython subprocess (default: 300)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def labs_hda(output: str, hython_path: str, categories: str | None,
+             library_filter: str, timeout: int, verbose: bool):
+    """Extract Labs HDA internal graphs via hython introspection.
+
+    Runs a hython subprocess to unlock each Labs HDA, extract its internal
+    node network (children, connections, non-default parameters), and produce
+    a JSON corpus of HDA graphs.
+    """
+    from .ingestion.labs_hda import LabsHDAExtractor
+
+    output_path = Path(output)
+
+    console.print("[bold blue]Houdini Labs HDA Graph Extractor[/bold blue]")
+    console.print(f"hython: {hython_path}")
+    console.print(f"Library filter: {library_filter}")
+
+    cat_list = None
+    if categories:
+        cat_list = [c.strip() for c in categories.split(",") if c.strip()]
+        console.print(f"Categories: {', '.join(cat_list)}")
+    else:
+        console.print("Categories: all")
+
+    try:
+        extractor = LabsHDAExtractor(
+            hython_path=hython_path,
+            categories=cat_list,
+            library_filter=library_filter,
+            timeout=timeout,
+        )
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Extracting Labs HDA graphs via hython...", total=None)
+            corpus = extractor.extract()
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Extracted {corpus.hda_count} Labs HDA graphs")
+        console.print(f"[green]✓[/green] Houdini version: {corpus.houdini_version}")
+        console.print(f"[green]✓[/green] Contexts: {', '.join(corpus.contexts())}")
+
+        if verbose:
+            for ctx in corpus.contexts():
+                count = len(corpus.get_by_context(ctx))
+                console.print(f"  {ctx}: {count}")
+
+            # Show some stats
+            total_nodes = sum(g.node_count for g in corpus.graphs.values())
+            total_conns = sum(g.connection_count for g in corpus.graphs.values())
+            console.print(f"  Total internal nodes: {total_nodes}")
+            console.print(f"  Total internal connections: {total_conns}")
+
+        corpus.save_json(output_path)
+        console.print(f"[green]✓[/green] Saved to: {output_path}")
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except TimeoutError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()
