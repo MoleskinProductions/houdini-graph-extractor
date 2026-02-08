@@ -1,5 +1,27 @@
+# Python
 .venv/
-.pytest_cache/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
 .coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Extraction artifacts (large, generated)
+downloads/
+frames/
+*.mp4
+*.webm
+*.mkv
+
+# Temp data
+/tmp/
