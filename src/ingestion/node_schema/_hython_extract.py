@@ -44,7 +44,7 @@ TEMP_PARENT_MAP = {
     "Object": ("/obj", None),
     "Driver": ("/out", None),
     "Cop2": ("/img", "img"),
-    "Chop": ("/ch", "chopnet"),
+    "Chop": ("/obj", "chopnet"),
     "Shop": ("/shop", None),
     "Top": ("/obj", "topnet"),
     "Lop": ("/stage", None),
