@@ -97,6 +97,34 @@ def find_labs_hdas(category, library_filter):
     return results
 
 
+
+# Parameters whose string values should never be captured (environment dumps, secrets).
+_SCRUB_PARAM_NAMES = {"customenv"}
+
+# Substrings that indicate a string value contains secrets and should be redacted.
+_SECRET_MARKERS = (
+    "API_KEY",
+    "API_TOKEN",
+    "SECRET_KEY",
+    "ACCESS_TOKEN",
+    "HF_TOKEN",
+    "ANTHROPIC_",
+    "OPENROUTER_",
+    "REPLICATE_",
+    "sk-ant-",
+    "sk-or-v1",
+)
+
+
+def _should_scrub_value(param_name, value):
+    """Return True if a parameter value should be redacted."""
+    if param_name in _SCRUB_PARAM_NAMES:
+        return True
+    if isinstance(value, str) and any(marker in value for marker in _SECRET_MARKERS):
+        return True
+    return False
+
+
 def extract_node_params(node):
     """Extract non-default parameters from a node instance."""
     params = []
@@ -116,6 +144,8 @@ def extract_node_params(node):
             if isinstance(val, (int, float, bool)):
                 param_data["value"] = val
             elif isinstance(val, str):
+                if _should_scrub_value(p.name(), val):
+                    continue
                 param_data["value"] = val
             else:
                 # hou.Ramp, hou.Geometry, etc. — skip
