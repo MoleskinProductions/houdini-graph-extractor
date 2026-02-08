@@ -132,6 +132,11 @@ to subgraph templates:
 3. **Template extraction** — build SubgraphTemplate per HDA with node types,
    counts, and connections; sort richest implementation first
 
+**Results** (from 462 Labs HDAs):
+- 315 intent clusters, 456 templates
+- 8 categories: sop (260), cop2 (12), out (15), top (13), lop (6), obj (4), vop (3), dop (2)
+- Largest clusters: AV (6 templates each for analyze, depth, init, mesh, SfM, texturing)
+
 **Output:** `intent_library.json` — IntentLibrary with `save_json`/`load_json`,
 same API as other corpora. Supports keyword `search()` and `get_by_category()`.
 
