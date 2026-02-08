@@ -40,7 +40,7 @@ src/
 | 1A | Node type introspection from Houdini | Implemented |
 | 1B | Help documentation parsing | Implemented |
 | 1C | Labs HDA internal graph extraction | Implemented |
-| 2A | Connection pattern mining | Not started |
+| 2A | Connection pattern mining | Implemented |
 | 2B | Intent-to-subgraph mapping | Not started |
 | 3A | Video tutorial extraction | Implemented |
 

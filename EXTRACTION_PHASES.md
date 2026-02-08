@@ -35,7 +35,7 @@ Stored in a format queryable by the orchestrator via MCP tools.
 - HouGraph IR owns the schema data structures
 - Orchestrator consumes via MCP tool: `query_node_schema(node_type) → definition`
 
-### 1B — Help Documentation Extraction
+### 1B — Help Documentation Extraction ✅
 
 **Source:** Houdini help corpus (HTML shipped with Houdini install)
 **Location:** `$HFS/houdini/help/nodes/`
@@ -84,24 +84,38 @@ Labs nodes are HDAs (Houdini Digital Assets) wrapping subnet logic:
 **Goal:** Extract how nodes combine — the navigational semantics that
 make the search space tractable.
 
-### 2A — Connection Pattern Mining
+### 2A — Connection Pattern Mining ✅
 
-**Source:** Phase 1C Labs graphs + Houdini example .hip files
-**Mechanism:** Graph analysis on HouGraph IR instances
+**Source:** Phase 1C Labs graphs (462 HDAs, 17,248 internal nodes, 19,779 connections)
+**Mechanism:** `src/analysis/pattern_mining/` (implemented)
 
-Extract:
-- Common upstream/downstream relationships (e.g., scatter → copy_to_points input 1)
-- Typical subgraph patterns (e.g., the "scatter + copy + instance" idiom)
-- Port usage statistics (which inputs are most commonly connected)
-- Parameter co-occurrence (when node X has param A set, node Y often has param B)
+Five mining passes over the HDA graph corpus:
+1. **Connection frequency** — directed edge types deduplicated per graph
+2. **Downstream/upstream suggestions** — ranked neighbor lists per node type
+3. **Node co-occurrence** — Jaccard similarity between type pairs
+4. **Port usage statistics** — which ports are actually connected, with usage ratios
+5. **Chain patterns** — sequential 2-chains and 3-chains
 
-**Output:** Pattern graph / co-occurrence matrix queryable by context.
+Optional schema enrichment resolves port indices to human-readable names
+using the Phase 1A SchemaCorpus.
+
+**Results** (from 462 Labs HDAs):
+- 4,005 connection patterns
+- 468 node suggestion sets
+- 14,174 co-occurrence pairs
+- 479 port usage entries
+- 3,384 two-chains, 23,730 three-chains
+
+**Output:** `patterns.json` — PatternCorpus with `save_json`/`load_json`, same API as other corpora.
+
+**CLI:** `houdini-pattern-mine --corpus labs_graphs.json --schema node_schema.json -o patterns.json`
 
 **Coordination:**
 - Extraction produces the pattern data
 - Orchestrator uses it to narrow search: given current graph state,
   what nodes/connections are most likely next?
 - MCP tool: `suggest_next_node(current_graph_state) → ranked_suggestions`
+- `PatternCorpus.get_downstream(node_type)` / `get_upstream(node_type)` for fast lookups
 
 ### 2B — Context-to-Subgraph Mapping
 
@@ -128,7 +142,7 @@ Map high-level intents to subgraph templates:
 **Goal:** Layer rich, diverse, real-world knowledge on top of the
 structural and relational foundation.
 
-### 3A — Video Extraction Pipeline (Current Repo)
+### 3A — Video Extraction Pipeline ✅
 
 **Source:** YouTube tutorials, official SideFX webinars, Houdini streams
 **Mechanism:** Existing dual-stream pipeline (visual + transcript)
@@ -250,36 +264,32 @@ This means:
 
 ### For Extraction (this repo):
 
-1. **Build help doc parser** (Phase 1B)
-   - Parse $HFS/houdini/help/nodes/ HTML
-   - Structure per-node: params, notes, related nodes, examples
-   - Link to schema by node type
+1. **Build Phase 2B — Intent-to-Subgraph Mapping**
+   - Cluster Labs HDA graphs by task/domain using co-occurrence data
+   - Tag clusters with high-level intents (e.g., "scatter points", "simulate cloth")
+   - Produce intent-indexed template library queryable by orchestrator
 
-2. **Extend schema generator** (Phase 1A)
-   - Add Labs HDA introspection (internal networks)
-   - Export internal graphs as HouGraph IR instances
-   - Add help summary extraction from hou module
+2. **Validation integration**
+   - Wire Phase 1 schema into video extraction pipeline
+   - Extracted node types checked against known definitions
+   - Unknown types flagged, not silently accepted
+   - Connection patterns validated against Phase 2A data
 
 3. **Define MCP tool interfaces**
    - Specify the extraction tool contracts
    - Build thin MCP wrappers around existing pipeline stages
-   - Start with `introspect_node_type` and `extract_help_docs`
-
-4. **Validation integration**
-   - Wire Phase 1 schema into extraction pipeline
-   - Extracted node types checked against known definitions
-   - Unknown types flagged, not silently accepted
+   - Start with `introspect_node_type`, `extract_help_docs`, `suggest_next_node`
 
 ### For HouGraph IR:
 
-5. **Extend format for knowledge metadata**
+4. **Extend format for knowledge metadata**
    - Pattern annotations (frequency, co-occurrence scores)
    - Intent tags on subgraph templates
    - Provenance chain (which phase produced this instance)
 
 ### For Orchestrator:
 
-6. **Define knowledge query protocol**
+5. **Define knowledge query protocol**
    - How the orchestrator asks for node info, patterns, templates
    - Response format that fits context windows efficiently
    - Progressive detail (summary → full definition on demand)
