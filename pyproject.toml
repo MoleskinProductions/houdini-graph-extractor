@@ -37,6 +37,7 @@ all = [
 [project.scripts]
 houdini-extract = "src.main:main"
 houdini-help-parse = "src.main:help_docs"
+houdini-schema-extract = "src.main:node_schema"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

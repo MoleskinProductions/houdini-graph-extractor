@@ -536,5 +536,109 @@ def help_docs(output: str, zip_path: str, contexts: str | None, verbose: bool):
         sys.exit(1)
 
 
+@click.command("node-schema")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    default="node_schema.json",
+    help="Output JSON file path",
+)
+@click.option(
+    "--hython-path",
+    type=click.Path(),
+    default="/opt/hfs21.0/bin/hython",
+    help="Path to hython executable",
+)
+@click.option(
+    "--categories",
+    type=str,
+    default=None,
+    help="Comma-separated categories to extract (e.g. Sop,Dop,Vop). Default: all.",
+)
+@click.option(
+    "--no-ports",
+    is_flag=True,
+    help="Skip port extraction (faster, no node instantiation needed)",
+)
+@click.option(
+    "--timeout",
+    type=int,
+    default=120,
+    help="Timeout in seconds for hython subprocess (default: 120)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def node_schema(output: str, hython_path: str, categories: str | None, no_ports: bool,
+                timeout: int, verbose: bool):
+    """Extract Houdini node type schemas via hython introspection.
+
+    Runs a hython subprocess to extract parameter templates, port definitions,
+    and metadata for every node type in Houdini.
+    """
+    from .ingestion.node_schema import NodeSchemaExtractor
+
+    output_path = Path(output)
+
+    console.print("[bold blue]Houdini Node Schema Extractor[/bold blue]")
+    console.print(f"hython: {hython_path}")
+
+    cat_list = None
+    if categories:
+        cat_list = [c.strip() for c in categories.split(",") if c.strip()]
+        console.print(f"Categories: {', '.join(cat_list)}")
+    else:
+        console.print("Categories: all")
+
+    if no_ports:
+        console.print("[dim]Port extraction: disabled[/dim]")
+
+    try:
+        extractor = NodeSchemaExtractor(
+            hython_path=hython_path,
+            categories=cat_list,
+            timeout=timeout,
+            extract_ports=not no_ports,
+        )
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Extracting node schemas via hython...", total=None)
+            corpus = extractor.extract()
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Extracted {corpus.node_count} node types")
+        console.print(f"[green]✓[/green] Houdini version: {corpus.houdini_version}")
+        console.print(f"[green]✓[/green] Contexts: {', '.join(corpus.contexts())}")
+
+        if verbose:
+            for ctx in corpus.contexts():
+                count = len(corpus.get_by_context(ctx))
+                console.print(f"  {ctx}: {count}")
+
+        corpus.save_json(output_path)
+        console.print(f"[green]✓[/green] Saved to: {output_path}")
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except TimeoutError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

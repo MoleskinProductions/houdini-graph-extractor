@@ -1,0 +1,249 @@
+{
+  "version": "1.0",
+  "houdini_version": "21.0.506",
+  "extraction_timestamp": "2025-01-15T12:00:00+00:00",
+  "node_count": 4,
+  "contexts": [
+    "dop",
+    "obj",
+    "sop",
+    "vop"
+  ],
+  "nodes": {
+    "dop/rbdpackedobject": {
+      "category": "Dop",
+      "type_name": "rbdpackedobject",
+      "label": "RBD Packed Object",
+      "base_type": "rbdpackedobject",
+      "icon": "DOP_rbdpackedobject",
+      "min_inputs": 0,
+      "max_inputs": 1,
+      "max_outputs": 1,
+      "parameters": [
+        {
+          "name": "creation_frame",
+          "label": "Creation Frame",
+          "type": "Int",
+          "default": [1]
+        },
+        {
+          "name": "objpath",
+          "label": "SOP Path",
+          "type": "String",
+          "help": "The path to the SOP containing the packed primitives."
+        },
+        {
+          "name": "use_deforming_geometry",
+          "label": "Use Deforming Geometry",
+          "type": "Toggle",
+          "default": [0]
+        }
+      ],
+      "inputs": [
+        {
+          "index": 0,
+          "name": "input0",
+          "label": "Objects"
+        }
+      ],
+      "outputs": [
+        {
+          "index": 0,
+          "name": "output0",
+          "label": "Objects"
+        }
+      ]
+    },
+    "obj/geo": {
+      "category": "Object",
+      "type_name": "geo",
+      "label": "Geometry",
+      "base_type": "geo",
+      "icon": "OBJ_geo",
+      "max_inputs": 1,
+      "max_outputs": 1,
+      "is_generator": true,
+      "parameters": [
+        {
+          "name": "xOrd",
+          "label": "Transform Order",
+          "type": "Menu",
+          "menu_items": ["srt", "str", "rst", "rts", "tsr", "trs"],
+          "menu_labels": ["Scale Rot Trans", "Scale Trans Rot", "Rot Scale Trans", "Rot Trans Scale", "Trans Scale Rot", "Trans Rot Scale"]
+        },
+        {
+          "name": "tx",
+          "label": "Translate",
+          "type": "Float",
+          "size": 3,
+          "default": [0.0, 0.0, 0.0]
+        }
+      ]
+    },
+    "sop/scatter": {
+      "category": "Sop",
+      "type_name": "scatter",
+      "label": "Scatter",
+      "base_type": "scatter",
+      "version": "2.0",
+      "icon": "SOP_scatter",
+      "min_inputs": 1,
+      "max_inputs": 3,
+      "max_outputs": 1,
+      "parameters": [
+        {
+          "name": "npts",
+          "label": "Force Total Count",
+          "type": "Int",
+          "default": [1000],
+          "min_value": 0,
+          "min_is_strict": true
+        },
+        {
+          "name": "usedensityattrib",
+          "label": "Use Density Attribute",
+          "type": "Toggle",
+          "default": [0]
+        },
+        {
+          "name": "densityattrib",
+          "label": "Density Attribute",
+          "type": "String",
+          "default": ["density"],
+          "disable_when": "{ usedensityattrib == 0 }"
+        },
+        {
+          "name": "seed",
+          "label": "Seed",
+          "type": "Float",
+          "default": [0.0]
+        },
+        {
+          "name": "emergencyLimit",
+          "label": "Emergency Limit",
+          "type": "Int",
+          "default": [1000000],
+          "is_hidden": true
+        },
+        {
+          "name": "relaxpoints",
+          "label": "Relax Iterations",
+          "type": "Int",
+          "default": [0],
+          "min_value": 0,
+          "max_value": 100
+        },
+        {
+          "name": "group",
+          "label": "Group",
+          "type": "String"
+        },
+        {
+          "name": "generatealiases",
+          "label": "Generate Point Aliases",
+          "type": "Toggle",
+          "default": [0]
+        },
+        {
+          "name": "primuvinputindex",
+          "label": "Prim UV Input Index",
+          "type": "Int",
+          "default": [0],
+          "is_hidden": true
+        },
+        {
+          "name": "outputaliasattrib",
+          "label": "Output Alias Attribute",
+          "type": "String",
+          "default": ["alias"],
+          "is_hidden": true
+        }
+      ],
+      "inputs": [
+        {
+          "index": 0,
+          "name": "input0",
+          "label": "Surface to Scatter On"
+        },
+        {
+          "index": 1,
+          "name": "input1",
+          "label": "Optional Density Texture"
+        },
+        {
+          "index": 2,
+          "name": "input2",
+          "label": "Optional Bounding Region"
+        }
+      ],
+      "outputs": [
+        {
+          "index": 0,
+          "name": "output0",
+          "label": "Scattered Points"
+        }
+      ]
+    },
+    "vop/aanoise": {
+      "category": "Vop",
+      "type_name": "aanoise",
+      "label": "Anti-Aliased Noise",
+      "base_type": "aanoise",
+      "icon": "VOP_aanoise",
+      "max_inputs": 9999,
+      "max_outputs": 1,
+      "parameters": [
+        {
+          "name": "signature",
+          "label": "Signature",
+          "type": "Menu",
+          "menu_items": ["default", "fp", "fv", "vp", "vv"],
+          "menu_labels": ["1D Noise", "1D Flow Noise", "1D Periodic Noise", "3D Noise", "3D Flow Noise"]
+        },
+        {
+          "name": "pos",
+          "label": "Position",
+          "type": "Float",
+          "size": 3,
+          "default": [0.0, 0.0, 0.0]
+        },
+        {
+          "name": "amp",
+          "label": "Amplitude",
+          "type": "Float",
+          "default": [1.0]
+        },
+        {
+          "name": "rough",
+          "label": "Roughness",
+          "type": "Float",
+          "default": [0.5],
+          "min_value": 0.0,
+          "max_value": 1.0
+        },
+        {
+          "name": "turb",
+          "label": "Turbulence",
+          "type": "Int",
+          "default": [5],
+          "min_value": 1,
+          "max_value": 16
+        }
+      ],
+      "inputs": [
+        {
+          "index": 0,
+          "name": "pos",
+          "label": "Position"
+        }
+      ],
+      "outputs": [
+        {
+          "index": 0,
+          "name": "noise",
+          "label": "Noise"
+        }
+      ]
+    }
+  }
+}

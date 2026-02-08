@@ -67,6 +67,16 @@ class StateConfig:
 
 
 @dataclass
+class NodeSchemaConfig:
+    """Node type schema extraction settings."""
+
+    hython_path: Path = field(default_factory=lambda: Path("/opt/hfs21.0/bin/hython"))
+    categories: list[str] = field(default_factory=list)  # Empty = all
+    timeout: int = 120
+    extract_ports: bool = True
+
+
+@dataclass
 class HelpDocsConfig:
     """Help documentation parsing settings."""
 
@@ -88,6 +98,7 @@ class Config:
     harmonization: HarmonizationConfig = field(default_factory=HarmonizationConfig)
     state: StateConfig = field(default_factory=StateConfig)
     help_docs: HelpDocsConfig = field(default_factory=HelpDocsConfig)
+    node_schema: NodeSchemaConfig = field(default_factory=NodeSchemaConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))
