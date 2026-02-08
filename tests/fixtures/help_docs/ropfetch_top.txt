@@ -1,0 +1,66 @@
+#type:     node
+#context:  top
+#internal: ropfetch
+#icon:     TOP/ropfetch
+#since: 17.5
+
+= ROP Fetch =
+
+"""Creates work items that cook a ROP node or network."""
+
+This node cooks a ROP node or network using TOPs.
+
+@top_attributes
+
+::`hip`:
+    #type: string
+
+    The path to the `.hip` file that contains the ROP node.
+
+::`outputparm`:
+    #type: string
+
+    The name of the parameter on the target ROP node that contains the output file path.
+
+::`rop`:
+    #type: string
+
+    The ROP node path within the `.hip` file.
+
+::`range`:
+    #type: float3
+
+    The start, end, and increment frame range values.
+
+::`slice`:
+    #type: integer
+
+    When running a distributed sim, the slice number associated with the work item.
+
+@parameters
+
+== ROP Fetch ==
+
+:include processor_common#pdg_workitemgeneration:
+
+~~~
+
+ROP Cook Order:
+    #id: roporder
+
+    Determines how the ROP nodes should be cooked.
+
+    Frame by Frame:
+        The entire ROP chain is cooked for the current frame.
+    Node by Node:
+        Each ROP is cooked for all frames before moving to the next.
+
+ROP Path:
+    #id: roppath
+
+    The path to the ROP node to cook.
+
+@related
+
+- [Node:top/ropoutput]
+- [Node:top/ropmantra]

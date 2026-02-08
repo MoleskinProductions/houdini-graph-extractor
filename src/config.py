@@ -67,6 +67,17 @@ class StateConfig:
 
 
 @dataclass
+class HelpDocsConfig:
+    """Help documentation parsing settings."""
+
+    zip_path: Path = field(default_factory=lambda: Path("/opt/hfs21.0/houdini/help/nodes.zip"))
+    contexts: list[str] = field(default_factory=lambda: [
+        "apex", "chop", "cop", "cop2", "dop", "lop", "obj", "out",
+        "shop", "sop", "top", "vop",
+    ])
+
+
+@dataclass
 class Config:
     """Main configuration container."""
 
@@ -76,6 +87,7 @@ class Config:
     transcript_analysis: TranscriptAnalysisConfig = field(default_factory=TranscriptAnalysisConfig)
     harmonization: HarmonizationConfig = field(default_factory=HarmonizationConfig)
     state: StateConfig = field(default_factory=StateConfig)
+    help_docs: HelpDocsConfig = field(default_factory=HelpDocsConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))

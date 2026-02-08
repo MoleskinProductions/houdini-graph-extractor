@@ -1,0 +1,53 @@
+#type: node
+#context: chop
+#internal: math
+#icon: CHOP/math
+
+= Math =
+
+"""Perform a variety of arithmetic operations on and between channels."""
+
+This CHOP allows you to perform a variety of arithmetic operations on
+and between channels.
+
+@parameters
+
+== OP ==
+
+Channel Pre OP:
+    A menu of unary operations that are performed on single channels.
+
+Combine Channels:
+    A menu of operations performed between the channels of a single input CHOP.
+
+== Mult-Add ==
+
+Pre-Add:
+    #channels: /preoff
+
+    First, add value to each new channel.
+Multiply:
+    #channels: /gain
+
+    Then multiply by this value.
+Post-Add:
+    #channels: /postoff
+
+    Then add this value.
+
+:include common#common:
+
+@locals
+
+I:
+    The current index.
+V:
+    The current value.
+C:
+    Current channel index (0 to NC-1).
+NC:
+    Total number of channels.
+
+@related
+    - [Node:chop/logic]
+    - [Node:chop/function]

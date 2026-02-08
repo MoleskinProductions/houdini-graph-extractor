@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "houdini-graph-extractor"
 version = "0.1.0"
-description = "Extract Houdini node graphs from YouTube tutorial videos"
+description = "Data extraction agent for the pixel_vision pipeline — extracts Houdini node graphs from documentation, node introspection, and video tutorials"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -36,9 +36,14 @@ all = [
 
 [project.scripts]
 houdini-extract = "src.main:main"
+houdini-help-parse = "src.main:help_docs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100

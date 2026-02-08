@@ -461,5 +461,80 @@ def main(
         sys.exit(1)
 
 
+@click.command("help-docs")
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    default="help_corpus.json",
+    help="Output JSON file path",
+)
+@click.option(
+    "--zip-path",
+    type=click.Path(exists=True),
+    default="/opt/hfs21.0/houdini/help/nodes.zip",
+    help="Path to Houdini help nodes.zip",
+)
+@click.option(
+    "--contexts",
+    type=str,
+    default=None,
+    help="Comma-separated list of contexts to parse (e.g. sop,dop,vop). Default: all.",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def help_docs(output: str, zip_path: str, contexts: str | None, verbose: bool):
+    """Parse Houdini help documentation into structured JSON.
+
+    Reads node help files from the Houdini nodes.zip archive and produces
+    a JSON corpus keyed by context/internal_name.
+    """
+    from pathlib import Path
+    from .ingestion.help_docs import HelpCorpusParser
+
+    output_path = Path(output)
+
+    console.print("[bold blue]Houdini Help Documentation Parser[/bold blue]")
+    console.print(f"Source: {zip_path}")
+
+    ctx_set = None
+    if contexts:
+        ctx_set = {c.strip() for c in contexts.split(",") if c.strip()}
+        console.print(f"Contexts: {', '.join(sorted(ctx_set))}")
+
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Parsing help documentation...", total=None)
+            parser = HelpCorpusParser(zip_path=zip_path, contexts=ctx_set)
+            corpus = parser.parse()
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Parsed {corpus.node_count} node docs")
+        console.print(f"[green]✓[/green] Contexts: {', '.join(corpus.contexts())}")
+
+        if verbose:
+            for ctx in corpus.contexts():
+                count = len(corpus.get_by_context(ctx))
+                console.print(f"  {ctx}: {count}")
+
+        corpus.save_json(output_path)
+        console.print(f"[green]✓[/green] Saved to: {output_path}")
+
+    except FileNotFoundError:
+        console.print(f"[red]Error: Zip file not found: {zip_path}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

@@ -1,0 +1,77 @@
+= Scatter =
+
+#type: node
+#context: sop
+#internal: scatter
+#icon: SOP/scatter
+#tags: copy, random, points
+#version: 2.0
+#since: 14.0
+
+"""Scatters new points randomly across a surface or through a volume."""
+
+== Overview ==
+
+This node distributes new points across the surface in a roughly uniform pattern and optionally attempts to limit clumping and holes.
+
+:include /shelf/scatter#includeme:
+
+== Making scattered points stick on changing geometry == (stick)
+
+If the input to the Scatter node changes on each frame, the output point positions and point numbers may change randomly from frame to frame.
+
+@parameters
+
+Group:
+    #id: group
+
+    Group of primitives on which to generate points.
+
+Generate:
+    #id: generateby
+
+    The overall approach to use when generating points.
+
+    By Density:
+        Points will be distributed independently based on having a density over each primitive.
+    Count per Primitive:
+        Exactly the number of points specified will be generated on each primitive.
+    In Texture Space:
+        Points will first be scattered into the unit square of texture space.
+
+Density Scale:
+    #id: densityscale
+    #channels: /densityscale
+
+    Value or multiplier indicating the density of points to generate.
+
+Force Total Count:
+    #id: npts
+
+    When enabled, exactly this many points will be generated.
+
+~~~ Distribution ~~~
+
+Relax Iterations:
+    #id: relaxiterations
+
+    When enabled, points will be relaxed, pushed away from each other.
+
+Max Relax Radius:
+    #id: maxradius
+
+    Maximum radius within which points will influence other points.
+
+~~~
+
+Point Attributes:
+    #id: pointattribs
+
+    These point attributes will be interpolated from the input geometry.
+
+@related
+
+- [Node:sop/copy]
+- [Node:sop/attribinterpolate]
+- [Node:sop/relax]
+- [Node:pop/source]

@@ -1,0 +1,45 @@
+= Box =
+
+#type: node
+#context: sop
+#internal: box
+#icon: SOP/box
+#tags: create, model
+
+"""Creates a cube or six-sided rectangular box."""
+
+TIP:
+    If you connect geometry to the Box SOP's input, it will create a
+    bounding box around the input geometry.
+
+@parameters
+    Primitive Type:
+        Type of geometry to create.
+
+        Polygon:
+            Construct the box from size quadrilateral polygons.
+        Polygon mesh:
+            Construct the box from a mesh of smaller polygons.
+        NURBS:
+            Construct the box from six NURBS surfaces.
+
+    Size:
+        #channels: /sizex /sizey /sizez
+
+        Size of the box along xyz axes.
+    Center:
+        #channels: /tx /ty /tz
+
+        Position of center of box.
+    Rotate:
+        #channels: /rx /ry /rz
+
+        Rotation about the center of the box.
+    Uniform Scale:
+        #channels: /scale
+
+        Uniform scaling.
+
+@related
+    - [Node:sop/bound]
+    - [Node:sop/lattice]

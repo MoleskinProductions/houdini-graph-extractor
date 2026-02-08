@@ -1,0 +1,16 @@
+#type: include
+
+== Transformation order == (xord)
+
+Port Value ||
+    #width: 15%
+    Transformation Order ||
+
+0 |
+    SRT
+
+1 |
+    STR
+
+2 |
+    RST

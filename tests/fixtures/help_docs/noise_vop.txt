@@ -1,0 +1,37 @@
+#type: node
+#context: vop
+#internal: aanoise
+#icon: VOP/aanoise
+
+= Anti-Aliased Noise =
+
+"""Generates anti-aliased noise by using the derivative information of the incoming position to compute band-limited noise."""
+
+This operator generates anti-aliased (fractional brownian motion) noise
+by using the derivative information of the incoming position to compute
+band-limited noise. This type of noise is ideal for shading.
+
+@inputs
+
+::pos:
+    #type: Vector3
+    The position at which to evaluate the noise.
+
+::freq:
+    #type: Float
+    Frequency of the noise.
+
+@outputs
+
+::noise:
+    #type: Float
+    The resulting noise value.
+
+::dNdP:
+    #type: Vector3
+    Analytical derivative of the noise.
+
+@related
+    - [Node:vop/periodicnoise]
+    - [Node:vop/turbnoise]
+    - [Node:vop/voronoise]
