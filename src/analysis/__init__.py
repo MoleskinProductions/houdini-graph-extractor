@@ -4,6 +4,15 @@ from .transcript_parser import TranscriptParser, ActionEvent, EventType
 from .visual_extractor import VisualExtractor, GraphExtraction, NodeExtraction, ConnectionExtraction
 from .llm_transcript_analyzer import LLMTranscriptAnalyzer
 from .harmonizer import Harmonizer, HarmonizerConfig, HarmonizationResult, ConflictType, ResolutionStrategy
+from .pattern_mining import (
+    PatternMiner,
+    PatternCorpus,
+    ConnectionPattern,
+    ChainPattern,
+    NodeCooccurrence,
+    NodeSuggestions,
+    SchemaEnricher,
+)
 
 __all__ = [
     # Transcript parsing
@@ -23,4 +32,12 @@ __all__ = [
     "HarmonizationResult",
     "ConflictType",
     "ResolutionStrategy",
+    # Pattern mining
+    "PatternMiner",
+    "PatternCorpus",
+    "ConnectionPattern",
+    "ChainPattern",
+    "NodeCooccurrence",
+    "NodeSuggestions",
+    "SchemaEnricher",
 ]

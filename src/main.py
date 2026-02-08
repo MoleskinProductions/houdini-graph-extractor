@@ -750,5 +750,137 @@ def labs_hda(output: str, hython_path: str, categories: str | None,
         sys.exit(1)
 
 
+@click.command("pattern-mine")
+@click.option(
+    "--corpus",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to Labs HDA graph corpus JSON (from houdini-labs-extract)",
+)
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    default="patterns.json",
+    help="Output JSON file path",
+)
+@click.option(
+    "--schema",
+    type=click.Path(exists=True),
+    default=None,
+    help="Optional node schema JSON (from houdini-schema-extract) for port name enrichment",
+)
+@click.option(
+    "--min-count",
+    type=int,
+    default=1,
+    help="Minimum frequency for a pattern to be included (default: 1)",
+)
+@click.option(
+    "--max-chain-length",
+    type=int,
+    default=3,
+    help="Maximum chain length to mine (default: 3)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def pattern_mine(corpus: str, output: str, schema: str | None, min_count: int,
+                 max_chain_length: int, verbose: bool):
+    """Mine connection patterns from Labs HDA graph corpus.
+
+    Analyzes the HDA graph corpus to discover connection patterns,
+    node co-occurrences, port usage statistics, and chain patterns.
+    Produces a PatternCorpus JSON for downstream use by the MCP Server.
+    """
+    from .ingestion.labs_hda.models import HDAGraphCorpus
+    from .analysis.pattern_mining import PatternMiner, SchemaEnricher
+
+    output_path = Path(output)
+
+    console.print("[bold blue]Houdini Connection Pattern Miner[/bold blue]")
+    console.print(f"Corpus: {corpus}")
+
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Loading HDA graph corpus...", total=None)
+            hda_corpus = HDAGraphCorpus.load_json(corpus)
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Loaded {hda_corpus.hda_count} HDA graphs")
+
+        miner = PatternMiner(
+            min_pattern_count=min_count,
+            max_chain_length=max_chain_length,
+        )
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Mining connection patterns...", total=None)
+            result = miner.mine(hda_corpus)
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Connection patterns: {result.pattern_count}")
+        console.print(f"[green]✓[/green] Node suggestions: {result.suggestion_count}")
+        console.print(f"[green]✓[/green] Co-occurrences: {len(result.cooccurrences)}")
+        console.print(f"[green]✓[/green] Port usage entries: {len(result.port_usage)}")
+        console.print(f"[green]✓[/green] 2-chains: {len(result.chain_patterns_2)}")
+        console.print(f"[green]✓[/green] 3-chains: {len(result.chain_patterns_3)}")
+
+        # Optional schema enrichment
+        if schema:
+            from .ingestion.node_schema.models import SchemaCorpus
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                console=console,
+            ) as progress:
+                task = progress.add_task("Enriching with port names from schema...", total=None)
+                schema_corpus = SchemaCorpus.load_json(schema)
+                enricher = SchemaEnricher(schema_corpus)
+                enricher.enrich(result)
+                progress.update(task, completed=True)
+
+            console.print(f"[green]✓[/green] Enriched with schema ({schema_corpus.node_count} node types)")
+
+        if verbose:
+            # Show top patterns
+            top_patterns = sorted(
+                result.connection_patterns.values(),
+                key=lambda p: p.count, reverse=True,
+            )[:10]
+            if top_patterns:
+                console.print("\n[bold]Top connection patterns:[/bold]")
+                for p in top_patterns:
+                    label = p.edge_key
+                    if p.source_output_name or p.dest_input_name:
+                        label += f" ({p.source_output_name or '?'} -> {p.dest_input_name or '?'})"
+                    console.print(f"  {p.count:4d}x  {label}")
+
+        result.save_json(output_path)
+        console.print(f"\n[green]✓[/green] Saved to: {output_path}")
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

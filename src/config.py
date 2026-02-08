@@ -98,6 +98,15 @@ class LabsHDAConfig:
 
 
 @dataclass
+class PatternMiningConfig:
+    """Pattern mining settings (Phase 2A)."""
+
+    min_pattern_count: int = 1
+    max_chain_length: int = 3
+    exclude_types: list[str] = field(default_factory=lambda: ["output"])
+
+
+@dataclass
 class Config:
     """Main configuration container."""
 
@@ -110,6 +119,7 @@ class Config:
     help_docs: HelpDocsConfig = field(default_factory=HelpDocsConfig)
     node_schema: NodeSchemaConfig = field(default_factory=NodeSchemaConfig)
     labs_hda: LabsHDAConfig = field(default_factory=LabsHDAConfig)
+    pattern_mining: PatternMiningConfig = field(default_factory=PatternMiningConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))
