@@ -1,9 +1,11 @@
 """LLM-based transcript analyzer for enhanced entity extraction."""
 
+from __future__ import annotations
+
 import json
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from openai import OpenAI
 
@@ -11,6 +13,9 @@ from ..config import get_config
 from ..ingestion.youtube import TranscriptSegment
 from ..state.models import EnhancedActionEvent
 from .transcript_parser import TranscriptParser, ActionEvent, EventType, HOUDINI_NODE_ALIASES
+
+if TYPE_CHECKING:
+    from .validator import StructuralValidator
 
 
 # LLM prompt for entity extraction from transcript segments
@@ -80,6 +85,7 @@ class LLMTranscriptAnalyzer:
     api_key: str | None = None
     batch_size: int = 10
     fallback_parser: TranscriptParser = field(default_factory=TranscriptParser)
+    validator: StructuralValidator | None = None
 
     def __post_init__(self):
         import os
@@ -254,6 +260,12 @@ class LLMTranscriptAnalyzer:
         """Normalize node type using Houdini alias map."""
         if not node_type:
             return node_type
+
+        # Try structural validator first (covers 4,876 node types)
+        if self.validator:
+            result = self.validator.validate_node_type(node_type)
+            if result.status.value != "unknown":
+                return result.resolved_type
 
         node_type_lower = node_type.lower().strip()
 

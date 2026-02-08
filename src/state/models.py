@@ -50,6 +50,10 @@ class NodeState:
     transcript_corroborated: bool = False
     position_stable: bool = True
 
+    # Validation metadata (Phase 1A/2A)
+    validation_status: str = ""              # ValidationStatus.value or empty
+    resolved_schema_key: str | None = None   # e.g. "sop/scatter"
+
     def update_from_visual(self, timestamp: float, confidence: float, position: list[float],
                            flags: dict | None = None) -> None:
         """Update node state from a visual extraction."""
@@ -129,7 +133,7 @@ class NodeState:
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
-        return {
+        d = {
             "name": self.name,
             "type": self.type,
             "position": self.position,
@@ -142,6 +146,11 @@ class NodeState:
             "transcript_corroborated": self.transcript_corroborated,
             "position_stable": self.position_stable,
         }
+        if self.validation_status:
+            d["validation_status"] = self.validation_status
+        if self.resolved_schema_key:
+            d["resolved_schema_key"] = self.resolved_schema_key
+        return d
 
     def get_params_flat(self) -> dict:
         """Get parameters as simple key-value pairs (without metadata)."""
@@ -167,6 +176,10 @@ class ConnectionState:
     observation_count: int = 1
     sources: list[SourceRecord] = field(default_factory=list)
 
+    # Validation metadata (Phase 2A)
+    pattern_count: int = 0        # times seen in pattern corpus
+    validation_status: str = ""   # ValidationStatus.value or empty
+
     @property
     def key(self) -> tuple:
         """Unique key for this connection."""
@@ -186,7 +199,7 @@ class ConnectionState:
 
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
-        return {
+        d = {
             "from_node": self.from_node,
             "from_output": self.from_output,
             "to_node": self.to_node,
@@ -196,6 +209,11 @@ class ConnectionState:
             "last_seen": self.last_seen,
             "observation_count": self.observation_count,
         }
+        if self.pattern_count:
+            d["pattern_count"] = self.pattern_count
+        if self.validation_status:
+            d["validation_status"] = self.validation_status
+        return d
 
 
 @dataclass

@@ -89,6 +89,23 @@ console = Console()
     help="Enable transcript/visual harmonization (default: enabled)",
 )
 @click.option(
+    "--schema-path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to node_schema_ports.json for structural validation (Phase 1A)",
+)
+@click.option(
+    "--patterns-path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to patterns_enriched.json for connection validation (Phase 2A)",
+)
+@click.option(
+    "--no-validation",
+    is_flag=True,
+    help="Disable structural validation even if corpus paths are given",
+)
+@click.option(
     "--verbose",
     "-v",
     is_flag=True,
@@ -107,6 +124,9 @@ def main(
     skip_low_priority: bool,
     use_llm_transcript: bool,
     harmonize: bool,
+    schema_path: str | None,
+    patterns_path: str | None,
+    no_validation: bool,
     verbose: bool,
 ):
     """
@@ -129,10 +149,31 @@ def main(
 
     output_path = Path(output)
 
+    # Load structural validator (Phase 1A/2A corpora)
+    validator = None
+    if not no_validation and (schema_path or patterns_path):
+        from .analysis.validator import StructuralValidator
+        schema_corpus = None
+        pattern_corpus = None
+
+        if schema_path:
+            from .ingestion.node_schema.models import SchemaCorpus
+            schema_corpus = SchemaCorpus.load_json(schema_path)
+
+        if patterns_path:
+            from .analysis.pattern_mining.models import PatternCorpus
+            pattern_corpus = PatternCorpus.load_json(patterns_path)
+
+        validator = StructuralValidator(schema=schema_corpus, patterns=pattern_corpus)
+
     console.print(f"[bold blue]Houdini Graph Extractor[/bold blue]")
     console.print(f"Processing: {url}")
+    validation_label = "disabled"
+    if validator:
+        validation_label = f"schema={validator.schema_node_count} types, patterns={validator.pattern_count}"
     console.print(f"[dim]Mode: {'LLM' if use_llm_transcript else 'Regex'} transcript analysis, "
-                  f"{'Harmonization enabled' if harmonize else 'No harmonization'}[/dim]\n")
+                  f"{'Harmonization enabled' if harmonize else 'No harmonization'}, "
+                  f"Validation: {validation_label}[/dim]\n")
 
     try:
         # Step 1: Ingest video and transcript
@@ -157,7 +198,7 @@ def main(
 
         if use_llm_transcript and video_info.transcript:
             console.print(f"[dim]Using LLM-based entity extraction[/dim]")
-            llm_analyzer = LLMTranscriptAnalyzer(api_base, model, api_key)
+            llm_analyzer = LLMTranscriptAnalyzer(api_base, model, api_key, validator=validator)
 
             with Progress(
                 SpinnerColumn(),
@@ -183,7 +224,7 @@ def main(
         else:
             # Fall back to regex-based parsing
             console.print(f"[dim]Using regex-based parsing[/dim]")
-            parser = TranscriptParser()
+            parser = TranscriptParser(validator=validator)
             regex_events = parser.parse(video_info.transcript)
             action_events = regex_events  # For timeline output
             enhanced_events = []  # No enhanced events in regex mode
@@ -242,7 +283,7 @@ def main(
         console.print("\n[bold]Processing frames with incremental harmonization...[/bold]")
         console.print(f"[dim]Using model: {model}[/dim]")
 
-        state = GraphStateManager()
+        state = GraphStateManager(validator=validator)
         visual_extractor = VisualExtractor(api_base, model, api_key)
 
         if harmonize:
@@ -253,14 +294,14 @@ def main(
                 accept_extra_visual_nodes=config.harmonization.accept_extra_visual_nodes,
                 extra_visual_penalty=config.harmonization.extra_visual_penalty,
             )
-            harmonizer = Harmonizer(state, harmonizer_config)
+            harmonizer = Harmonizer(state, harmonizer_config, validator=validator)
         else:
             merger_config = MergeConfig(
                 transcript_boost=config.state.transcript_boost,
                 decay_rate=config.state.confidence_decay_rate,
                 decay_after_frames=config.state.confidence_decay_after_frames,
             )
-            merger = StateMerger(state, merger_config)
+            merger = StateMerger(state, merger_config, validator=validator)
 
         # Step 6: Incremental processing loop
         valid_extractions = 0
@@ -378,6 +419,25 @@ def main(
             },
         }
 
+        # Add validation metadata
+        if validator:
+            validated_nodes = sum(
+                1 for n in state.nodes.values() if n.validation_status in ("valid", "valid_alias")
+            )
+            unknown_nodes = sum(
+                1 for n in state.nodes.values() if n.validation_status == "unknown"
+            )
+            pattern_validated = sum(
+                1 for c in state.connections.values() if c.validation_status == "known"
+            )
+            output_data["extraction_metadata"]["validation"] = {
+                "schema_node_count": validator.schema_node_count,
+                "pattern_count": validator.pattern_count,
+                "validated_nodes": validated_nodes,
+                "unknown_type_nodes": unknown_nodes,
+                "pattern_validated_connections": pattern_validated,
+            }
+
         # Add timeline
         if config.output.include_timeline and action_events:
             timeline = []
@@ -447,6 +507,14 @@ def main(
             flagged = output_data["extraction_metadata"].get("flagged_for_review", [])
             if flagged:
                 console.print(f"  [yellow]Flagged for review: {len(flagged)}[/yellow]")
+
+            val_meta = output_data["extraction_metadata"].get("validation")
+            if val_meta:
+                console.print(
+                    f"  Validation: {val_meta['validated_nodes']} validated, "
+                    f"{val_meta['unknown_type_nodes']} unknown types, "
+                    f"{val_meta['pattern_validated_connections']} pattern-matched connections"
+                )
         else:
             console.print("[yellow]  No nodes extracted[/yellow]")
 

@@ -9,6 +9,7 @@ from .models import ConflictRecord, EnhancedActionEvent
 from .graph_state import GraphStateManager
 
 if TYPE_CHECKING:
+    from ..analysis.validator import StructuralValidator
     from ..analysis.visual_extractor import GraphExtraction
 
 
@@ -57,16 +58,23 @@ class StateMerger:
     conflict resolution.
     """
 
-    def __init__(self, state: GraphStateManager, config: MergeConfig | None = None):
+    def __init__(
+        self,
+        state: GraphStateManager,
+        config: MergeConfig | None = None,
+        validator: StructuralValidator | None = None,
+    ):
         """
         Initialize the merger.
 
         Args:
             state: The GraphStateManager to merge into
             config: Optional merge configuration
+            validator: Optional structural validator for schema-aware alias matching
         """
         self.state = state
         self.config = config or MergeConfig()
+        self.validator = validator
 
     def merge_visual_extraction(
         self,
@@ -300,7 +308,20 @@ class StateMerger:
 
     def _is_type_alias(self, type1: str, type_set: set[str]) -> bool:
         """Check if type1 is an alias for any type in type_set."""
-        # Common Houdini node type aliases
+        type1_lower = type1.lower()
+
+        # Direct match
+        if type1_lower in type_set:
+            return True
+
+        # Delegate to structural validator when available
+        if self.validator:
+            for t in type_set:
+                if self.validator.types_match(type1, t, self.state.network_context):
+                    return True
+            return False
+
+        # Common Houdini node type aliases (fallback)
         aliases = {
             "scatter": {"scatter", "scatter sop"},
             "copytopoints": {"copytopoints", "copy to points", "copy"},
@@ -310,12 +331,6 @@ class StateMerger:
             "rbdbulletsolver": {"rbdbulletsolver", "rbd", "bullet", "rigid body"},
             "rbdmaterialfracture": {"rbdmaterialfracture", "fracture", "material fracture"},
         }
-
-        type1_lower = type1.lower()
-
-        # Direct match
-        if type1_lower in type_set:
-            return True
 
         # Check alias groups
         for canonical, alias_group in aliases.items():

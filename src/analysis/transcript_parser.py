@@ -1,10 +1,16 @@
 """Transcript parsing and action event detection."""
 
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from ..ingestion.youtube import TranscriptSegment
+
+if TYPE_CHECKING:
+    from .validator import StructuralValidator
 
 
 class EventType(str, Enum):
@@ -162,7 +168,8 @@ ACTION_PATTERNS = {
 class TranscriptParser:
     """Parse transcripts to detect Houdini action events."""
 
-    def __init__(self):
+    def __init__(self, validator: StructuralValidator | None = None):
+        self.validator = validator
         # Compile patterns for efficiency
         self.compiled_patterns = {
             event_type: [re.compile(p, re.IGNORECASE) for p in patterns]
@@ -171,6 +178,12 @@ class TranscriptParser:
 
     def normalize_node_type(self, text: str) -> str | None:
         """Convert spoken node name to Houdini node type."""
+        # Try structural validator first (covers 4,876 node types)
+        if self.validator:
+            result = self.validator.validate_node_type(text)
+            if result.status.value != "unknown":
+                return result.resolved_type
+
         text_lower = text.lower().strip()
 
         # Direct match

@@ -1,7 +1,9 @@
 """Graph state manager for maintaining canonical graph state with temporal metadata."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 
 from .models import (
     NodeState,
@@ -11,6 +13,9 @@ from .models import (
     SourceType,
     SourceRecord,
 )
+
+if TYPE_CHECKING:
+    from ..analysis.validator import StructuralValidator
 
 
 @dataclass
@@ -39,6 +44,9 @@ class GraphStateManager:
 
     # Processing state
     current_timestamp: float = 0.0
+
+    # Structural validator (Phase 1A/2A) — optional
+    validator: StructuralValidator | None = None
 
     # Context tracking for parameter association
     # Tracks which node is currently being discussed/manipulated
@@ -95,6 +103,18 @@ class GraphStateManager:
             position = node_data.get("position", [0, 0])
             flags = node_data.get("flags", {})
 
+            # Validate / resolve node type via structural validator
+            validation_status = ""
+            resolved_schema_key = None
+            if self.validator:
+                vr = self.validator.validate_node_type(
+                    node_type, context_hint=self.network_context,
+                )
+                node_type = vr.resolved_type
+                extraction_confidence = max(0.0, min(1.0, extraction_confidence + vr.confidence_adjustment))
+                validation_status = vr.status.value
+                resolved_schema_key = vr.resolved_key
+
             if name in self.nodes:
                 # Update existing node
                 self.nodes[name].update_from_visual(
@@ -103,6 +123,10 @@ class GraphStateManager:
                     position=position,
                     flags=flags,
                 )
+                if validation_status:
+                    self.nodes[name].validation_status = validation_status
+                if resolved_schema_key:
+                    self.nodes[name].resolved_schema_key = resolved_schema_key
                 stats["updated_nodes"] += 1
             else:
                 # Create new node
@@ -119,6 +143,8 @@ class GraphStateManager:
                         timestamp=timestamp,
                         confidence=extraction_confidence,
                     )],
+                    validation_status=validation_status,
+                    resolved_schema_key=resolved_schema_key,
                 )
                 stats["new_nodes"] += 1
 
@@ -129,11 +155,30 @@ class GraphStateManager:
             to_node = conn_data.get("to_node", "")
             to_input = conn_data.get("to_input", 0)
 
+            # Validate connection against pattern corpus
+            conn_pattern_count = 0
+            conn_validation_status = ""
+            conn_confidence = extraction_confidence
+            if self.validator:
+                from_type = self.nodes[from_node].type if from_node in self.nodes else ""
+                to_type = self.nodes[to_node].type if to_node in self.nodes else ""
+                if from_type and to_type:
+                    cr = self.validator.validate_connection(
+                        from_type, to_type, from_output, to_input,
+                    )
+                    conn_confidence = max(0.0, min(1.0, conn_confidence + cr.confidence_adjustment))
+                    conn_pattern_count = cr.pattern_count
+                    conn_validation_status = "known" if cr.known_pattern else "unknown"
+
             key = (from_node, from_output, to_node, to_input)
 
             if key in self.connections:
                 # Update existing connection
-                self.connections[key].update_observation(timestamp, extraction_confidence)
+                self.connections[key].update_observation(timestamp, conn_confidence)
+                if conn_pattern_count:
+                    self.connections[key].pattern_count = conn_pattern_count
+                if conn_validation_status:
+                    self.connections[key].validation_status = conn_validation_status
                 stats["updated_connections"] += 1
             else:
                 # Create new connection
@@ -142,14 +187,16 @@ class GraphStateManager:
                     from_output=from_output,
                     to_node=to_node,
                     to_input=to_input,
-                    confidence=extraction_confidence,
+                    confidence=conn_confidence,
                     first_seen=timestamp,
                     last_seen=timestamp,
                     sources=[SourceRecord(
                         source_type=SourceType.VISUAL,
                         timestamp=timestamp,
-                        confidence=extraction_confidence,
+                        confidence=conn_confidence,
                     )],
+                    pattern_count=conn_pattern_count,
+                    validation_status=conn_validation_status,
                 )
                 stats["new_connections"] += 1
 
@@ -361,6 +408,11 @@ class GraphStateManager:
         """Fuzzy string matching for node names/types."""
         if not search or not target:
             return False
+
+        # Delegate to structural validator when available
+        if self.validator:
+            if self.validator.types_match(search, target, self.network_context):
+                return True
 
         search = search.lower().strip()
         target = target.lower().strip()

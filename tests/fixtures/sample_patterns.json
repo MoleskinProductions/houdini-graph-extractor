@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "pattern_count": 3,
+  "suggestion_count": 0,
+  "connection_patterns": {
+    "scatter:0->copytopoints:0": {
+      "source_type": "scatter",
+      "dest_type": "copytopoints",
+      "source_output": 0,
+      "dest_input": 0,
+      "count": 12,
+      "hda_keys": ["sop/labs_scatter_and_copy"]
+    },
+    "box:0->scatter:0": {
+      "source_type": "box",
+      "dest_type": "scatter",
+      "source_output": 0,
+      "dest_input": 0,
+      "count": 8,
+      "hda_keys": ["sop/labs_scatter_and_copy"]
+    },
+    "attribwrangle:0->null:0": {
+      "source_type": "attribwrangle",
+      "dest_type": "null",
+      "source_output": 0,
+      "dest_input": 0,
+      "count": 25,
+      "hda_keys": ["sop/labs_cleanup"]
+    }
+  },
+  "node_suggestions": {},
+  "cooccurrences": {},
+  "port_usage": {},
+  "chain_patterns_2": {},
+  "chain_patterns_3": {}
+}

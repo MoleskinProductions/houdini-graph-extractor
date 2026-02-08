@@ -12,7 +12,7 @@ from .visual_extractor import GraphExtraction
 from .transcript_parser import HOUDINI_NODE_ALIASES
 
 if TYPE_CHECKING:
-    pass
+    from .validator import StructuralValidator
 
 
 class ConflictType(str, Enum):
@@ -95,6 +95,7 @@ class Harmonizer:
         self,
         state: GraphStateManager,
         config: HarmonizerConfig | None = None,
+        validator: StructuralValidator | None = None,
     ):
         """
         Initialize the harmonizer.
@@ -102,13 +103,15 @@ class Harmonizer:
         Args:
             state: Graph state manager to update
             config: Optional harmonization configuration
+            validator: Optional structural validator for schema-aware matching
         """
         # Import here to avoid circular import
         from ..state.merger import StateMerger
 
         self.state = state
         self.config = config or HarmonizerConfig()
-        self.merger = StateMerger(state)
+        self.validator = validator
+        self.merger = StateMerger(state, validator=validator)
 
         # Build reverse alias map for matching
         self._build_alias_map()
@@ -342,6 +345,28 @@ class Harmonizer:
                 resolution["action"] = f"Matched via alias: {transcript_type} = {visual_type}"
                 conflict.resolution = resolution["strategy"]
                 conflict.resolution_confidence = resolution["confidence"]
+            elif self.validator:
+                # When validator is available, trust whichever type is schema-valid
+                v_valid = self.validator.is_valid_type(visual_type, self.state.network_context)
+                t_valid = self.validator.is_valid_type(transcript_type, self.state.network_context)
+                if v_valid and not t_valid:
+                    resolution["strategy"] = ResolutionStrategy.TRUST_VISUAL.value
+                    resolution["confidence"] = 0.85
+                    resolution["action"] = f"Visual type '{visual_type}' is schema-valid; transcript type is not"
+                elif t_valid and not v_valid:
+                    resolution["strategy"] = ResolutionStrategy.TRUST_TRANSCRIPT.value
+                    resolution["confidence"] = 0.80
+                    resolution["action"] = f"Transcript type '{transcript_type}' is schema-valid; visual type is not"
+                elif self.config.prefer_visual_on_mismatch:
+                    resolution["strategy"] = ResolutionStrategy.TRUST_VISUAL.value
+                    resolution["confidence"] = visual.extraction_confidence
+                    resolution["action"] = "Both types schema-valid; trusting visual per config"
+                else:
+                    resolution["strategy"] = ResolutionStrategy.DEFER.value
+                    resolution["confidence"] = 0.4
+                    resolution["action"] = "Both types schema-valid - flagged for review"
+                conflict.resolution = resolution["strategy"]
+                conflict.resolution_confidence = resolution["confidence"]
             elif self.config.prefer_visual_on_mismatch:
                 resolution["strategy"] = ResolutionStrategy.TRUST_VISUAL.value
                 resolution["confidence"] = visual.extraction_confidence
@@ -362,6 +387,12 @@ class Harmonizer:
         if not node_type:
             return ""
 
+        # Delegate to structural validator when available
+        if self.validator:
+            return self.validator.normalize_type(
+                node_type, context_hint=self.state.network_context,
+            )
+
         lower = node_type.lower().strip()
 
         if lower in self.alias_to_canonical:
@@ -373,6 +404,12 @@ class Harmonizer:
         """Check if two node types match (including aliases)."""
         if not type1 or not type2:
             return False
+
+        # Delegate to structural validator when available
+        if self.validator:
+            return self.validator.types_match(
+                type1, type2, context_hint=self.state.network_context,
+            )
 
         t1 = type1.lower().strip()
         t2 = type2.lower().strip()

@@ -115,6 +115,15 @@ class IntentMappingConfig:
 
 
 @dataclass
+class ValidationConfig:
+    """Structural validation settings (Phase 1A/2A)."""
+
+    enabled: bool = True
+    schema_path: str | None = None    # path to node_schema_ports.json
+    patterns_path: str | None = None  # path to patterns_enriched.json
+
+
+@dataclass
 class Config:
     """Main configuration container."""
 
@@ -129,6 +138,7 @@ class Config:
     labs_hda: LabsHDAConfig = field(default_factory=LabsHDAConfig)
     pattern_mining: PatternMiningConfig = field(default_factory=PatternMiningConfig)
     intent_mapping: IntentMappingConfig = field(default_factory=IntentMappingConfig)
+    validation: ValidationConfig = field(default_factory=ValidationConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))
