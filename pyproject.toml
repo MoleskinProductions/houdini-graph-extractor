@@ -40,6 +40,7 @@ houdini-help-parse = "src.main:help_docs"
 houdini-schema-extract = "src.main:node_schema"
 houdini-labs-extract = "src.main:labs_hda"
 houdini-pattern-mine = "src.main:pattern_mine"
+houdini-intent-map = "src.main:intent_map"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

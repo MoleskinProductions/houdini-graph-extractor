@@ -882,5 +882,103 @@ def pattern_mine(corpus: str, output: str, schema: str | None, min_count: int,
         sys.exit(1)
 
 
+@click.command("intent-map")
+@click.option(
+    "--corpus",
+    type=click.Path(exists=True),
+    required=True,
+    help="Path to Labs HDA graph corpus JSON (from houdini-labs-extract)",
+)
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(),
+    default="intent_library.json",
+    help="Output JSON file path",
+)
+@click.option(
+    "--min-nodes",
+    type=int,
+    default=1,
+    help="Minimum non-excluded node count for an HDA to be included (default: 1)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enable verbose output",
+)
+def intent_map(corpus: str, output: str, min_nodes: int, verbose: bool):
+    """Map Labs HDAs to high-level user intents.
+
+    Analyzes the HDA graph corpus to cluster HDAs by intent based on their
+    labels, producing an IntentLibrary JSON for downstream use by the orchestrator.
+    """
+    from .ingestion.labs_hda.models import HDAGraphCorpus
+    from .analysis.intent_mapping import IntentMapper
+
+    output_path = Path(output)
+
+    console.print("[bold blue]Houdini Intent-to-Subgraph Mapper[/bold blue]")
+    console.print(f"Corpus: {corpus}")
+
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Loading HDA graph corpus...", total=None)
+            hda_corpus = HDAGraphCorpus.load_json(corpus)
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Loaded {hda_corpus.hda_count} HDA graphs")
+
+        mapper = IntentMapper(min_node_count=min_nodes)
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Mapping intents...", total=None)
+            library = mapper.map(hda_corpus)
+            progress.update(task, completed=True)
+
+        console.print(f"[green]✓[/green] Intent clusters: {library.intent_count}")
+        console.print(f"[green]✓[/green] Templates: {library.template_count}")
+
+        if verbose:
+            categories: dict[str, int] = {}
+            for cluster in library.intents.values():
+                categories[cluster.category] = categories.get(cluster.category, 0) + 1
+            console.print("\n[bold]Categories:[/bold]")
+            for ctx in sorted(categories):
+                console.print(f"  {ctx}: {categories[ctx]} intents")
+
+            # Show largest clusters
+            multi = sorted(
+                [c for c in library.intents.values() if c.template_count > 1],
+                key=lambda c: c.template_count, reverse=True,
+            )[:10]
+            if multi:
+                console.print("\n[bold]Largest clusters:[/bold]")
+                for c in multi:
+                    console.print(f"  {c.template_count}x  {c.description} ({c.intent_id})")
+
+        library.save_json(output_path)
+        console.print(f"\n[green]✓[/green] Saved to: {output_path}")
+
+    except FileNotFoundError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        if verbose:
+            import traceback
+            console.print(traceback.format_exc())
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

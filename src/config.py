@@ -107,6 +107,14 @@ class PatternMiningConfig:
 
 
 @dataclass
+class IntentMappingConfig:
+    """Intent mapping settings (Phase 2B)."""
+
+    exclude_types: list[str] = field(default_factory=lambda: ["output"])
+    min_node_count: int = 1
+
+
+@dataclass
 class Config:
     """Main configuration container."""
 
@@ -120,6 +128,7 @@ class Config:
     node_schema: NodeSchemaConfig = field(default_factory=NodeSchemaConfig)
     labs_hda: LabsHDAConfig = field(default_factory=LabsHDAConfig)
     pattern_mining: PatternMiningConfig = field(default_factory=PatternMiningConfig)
+    intent_mapping: IntentMappingConfig = field(default_factory=IntentMappingConfig)
 
     # Paths
     temp_dir: Path = field(default_factory=lambda: Path("/tmp/houdini-extractor"))

@@ -41,7 +41,7 @@ src/
 | 1B | Help documentation parsing | Implemented |
 | 1C | Labs HDA internal graph extraction | Implemented |
 | 2A | Connection pattern mining | Implemented |
-| 2B | Intent-to-subgraph mapping | Not started |
+| 2B | Intent-to-subgraph mapping | Implemented |
 | 3A | Video tutorial extraction | Implemented |
 
 Phase 1 builds the structural foundation. Phase 2 extracts relational patterns. Phase 3 layers applied knowledge from video — validated against Phases 1-2.

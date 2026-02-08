@@ -13,6 +13,12 @@ from .pattern_mining import (
     NodeSuggestions,
     SchemaEnricher,
 )
+from .intent_mapping import (
+    IntentMapper,
+    IntentLibrary,
+    IntentCluster,
+    SubgraphTemplate,
+)
 
 __all__ = [
     # Transcript parsing
@@ -40,4 +46,9 @@ __all__ = [
     "NodeCooccurrence",
     "NodeSuggestions",
     "SchemaEnricher",
+    # Intent mapping
+    "IntentMapper",
+    "IntentLibrary",
+    "IntentCluster",
+    "SubgraphTemplate",
 ]

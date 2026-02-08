@@ -117,17 +117,25 @@ using the Phase 1A SchemaCorpus.
 - MCP tool: `suggest_next_node(current_graph_state) → ranked_suggestions`
 - `PatternCorpus.get_downstream(node_type)` / `get_upstream(node_type)` for fast lookups
 
-### 2B — Context-to-Subgraph Mapping
+### 2B — Intent-to-Subgraph Mapping ✅
 
-**Source:** Help examples, Labs internals, example hip files
-**Mechanism:** Clustering and tagging extracted graphs by task/domain
+**Source:** Phase 1C Labs HDA labels + internal graphs
+**Mechanism:** `src/analysis/intent_mapping/` (implemented)
 
-Map high-level intents to subgraph templates:
-- "Scatter points on a surface" → scatter + attribnoise + copy_to_points
-- "Simulate cloth" → cloth_object + cloth_solver + constraint setup
-- "Create procedural rocks" → sphere + mountain + remesh + material
+Deterministic string analysis of HDA labels to map high-level intents
+to subgraph templates:
 
-**Output:** Intent-indexed template library.
+1. **Label normalization** — strip "Labs"/"vendor" prefixes, version suffixes,
+   stopwords; tokenize into keywords
+2. **Prefix-based clustering** — HDAs sharing keyword tokens cluster into
+   one intent (e.g. all "Tree *" HDAs → tree_* intents)
+3. **Template extraction** — build SubgraphTemplate per HDA with node types,
+   counts, and connections; sort richest implementation first
+
+**Output:** `intent_library.json` — IntentLibrary with `save_json`/`load_json`,
+same API as other corpora. Supports keyword `search()` and `get_by_category()`.
+
+**CLI:** `houdini-intent-map --corpus labs_graphs.json -o intent_library.json`
 
 **Coordination:**
 - Orchestrator decomposes user requests into intents
@@ -264,12 +272,7 @@ This means:
 
 ### For Extraction (this repo):
 
-1. **Build Phase 2B — Intent-to-Subgraph Mapping**
-   - Cluster Labs HDA graphs by task/domain using co-occurrence data
-   - Tag clusters with high-level intents (e.g., "scatter points", "simulate cloth")
-   - Produce intent-indexed template library queryable by orchestrator
-
-2. **Validation integration**
+1. **Validation integration**
    - Wire Phase 1 schema into video extraction pipeline
    - Extracted node types checked against known definitions
    - Unknown types flagged, not silently accepted
